@@ -15,6 +15,7 @@ import {
 import * as lojaService from "./services/lojaService";
 import { useAppStore } from "./store/useAppStore";
 import type { Product } from "./types/domain";
+import { logger } from "./utils/logger";
 
 export default function App() {
   const [erroPagamento, setErroPagamento] = useState("");
@@ -45,8 +46,10 @@ export default function App() {
         const authenticated = await initAuth();
         if (authenticated) {
           setNomeUsuario(getUsername() || "usuario");
+          logger.info("Usuario autenticado no bootstrap da aplicacao.");
         } else {
           setNomeUsuario("");
+          logger.info("Aplicacao iniciada sem sessao autenticada.");
         }
       } finally {
         setAuthReady(true);
@@ -61,6 +64,7 @@ export default function App() {
 
     const refreshHandle = window.setInterval(() => {
       void refreshToken().catch(() => {
+        logger.warn("Sessao perdida durante renovacao do token. Resetando estado local.");
         setNomeUsuario("");
         clearCart();
         setErroPagamento("");
@@ -74,11 +78,13 @@ export default function App() {
 
   const carregarProdutos = async (): Promise<void> => {
     try {
+      logger.info("Iniciando carga de produtos.");
       setProductsLoading(true);
       setProductsError("");
       const safeProducts = await lojaService.listarProdutos();
       setProducts(safeProducts);
     } catch {
+      logger.warn("Nao foi possivel carregar produtos da API. Usando lista local.");
       setProducts(mockProducts);
       setProductsError("Nao foi possivel carregar da API. Exibindo lista local.");
     } finally {
@@ -92,6 +98,7 @@ export default function App() {
   }, [authReady]);
 
   const handleLogin = async (): Promise<void> => {
+    logger.info("Usuario acionou login.");
     setPagina("produtos");
     await login();
   };
@@ -101,6 +108,7 @@ export default function App() {
   };
 
   const handleLogout = async (): Promise<void> => {
+    logger.info("Usuario acionou logout.");
     await logout();
     setNomeUsuario("");
     clearCart();
@@ -111,10 +119,14 @@ export default function App() {
 
   const handleSolicitarPagamento = async (): Promise<void> => {
     if (pagamentoEmAndamento) {
+      logger.info("Ignorando nova solicitacao de pagamento enquanto outra esta em andamento.");
       return;
     }
 
     try {
+      logger.info("Fluxo de pagamento iniciado.", {
+        itens: carrinho.length
+      });
       setPagamentoEmAndamento(true);
       setErroPagamento("");
       const pagamentoSolicitado = await lojaService.solicitarPagamento(carrinho);
@@ -124,7 +136,7 @@ export default function App() {
     } catch (error) {
       const mensagem = error instanceof Error ? error.message : "Falha ao solicitar pagamento.";
       setErroPagamento(mensagem);
-      console.error("Erro ao solicitar pagamento:", error);
+      logger.error("Erro ao solicitar pagamento.", error);
     } finally {
       setPagamentoEmAndamento(false);
     }

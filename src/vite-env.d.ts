@@ -13,3 +13,15 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+interface Window {
+  __APP_CONFIG__?: {
+    API_BASE_URL?: string;
+    APP_URL?: string;
+    KEYCLOAK_URL?: string;
+    KEYCLOAK_REALM?: string;
+    KEYCLOAK_CLIENT_ID?: string;
+    KEYCLOAK_REDIRECT_URI?: string;
+    KEYCLOAK_POST_LOGOUT_REDIRECT_URI?: string;
+  };
+}

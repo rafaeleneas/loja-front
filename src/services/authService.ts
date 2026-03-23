@@ -6,6 +6,7 @@ import {
   KEYCLOAK_REALM,
   KEYCLOAK_URL
 } from "../config/env";
+import { logger } from "../utils/logger";
 
 const keycloak = new Keycloak({
   url: KEYCLOAK_URL,
@@ -18,12 +19,21 @@ let initPromise: Promise<boolean> | null = null;
 
 export async function initAuth(): Promise<boolean> {
   if (initialized) {
+    logger.info("Autenticacao ja inicializada.", {
+      authenticated: Boolean(keycloak.authenticated)
+    });
     return Boolean(keycloak.authenticated);
   }
 
   if (initPromise) {
+    logger.info("Inicializacao da autenticacao ja esta em andamento.");
     return initPromise;
   }
+
+  logger.info("Inicializando autenticacao com Keycloak.", {
+    realm: KEYCLOAK_REALM,
+    keycloakUrl: KEYCLOAK_URL
+  });
 
   initPromise = keycloak
     .init({
@@ -33,11 +43,12 @@ export async function initAuth(): Promise<boolean> {
     })
     .then((authenticated) => {
       initialized = true;
+      logger.info("Autenticacao inicializada.", { authenticated });
       return authenticated;
     })
     .catch((error) => {
       initialized = false;
-      console.error("Falha ao inicializar autenticacao:", error);
+      logger.error("Falha ao inicializar autenticacao.", error);
       return false;
     })
     .finally(() => {
@@ -48,12 +59,14 @@ export async function initAuth(): Promise<boolean> {
 }
 
 export async function login(): Promise<void> {
+  logger.info("Redirecionando usuario para login.");
   await keycloak.login({
     redirectUri: KEYCLOAK_REDIRECT_URI
   });
 }
 
 export async function logout(): Promise<void> {
+  logger.info("Encerrando sessao do usuario.");
   await keycloak.logout({
     redirectUri: KEYCLOAK_POST_LOGOUT_REDIRECT_URI
   });
@@ -65,7 +78,7 @@ export async function refreshToken(): Promise<void> {
   try {
     await keycloak.updateToken(30);
   } catch (error) {
-    console.error("Falha ao atualizar token:", error);
+    logger.error("Falha ao atualizar token.", error);
     throw error;
   }
 }
