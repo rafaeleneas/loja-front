@@ -13,6 +13,9 @@ type PaymentPageProps = {
   isSubmitting: boolean;
   onBack: () => void;
   onLogout: () => Promise<void>;
+  onIncreaseQuantity: (productId: number) => void;
+  onDecreaseQuantity: (productId: number) => void;
+  onRemoveFromCart: (productId: number) => void;
   onSolicitarPagamento: () => Promise<void>;
   onClearError: () => void;
 };
@@ -24,6 +27,9 @@ export default function PaymentPage({
   isSubmitting,
   onBack,
   onLogout,
+  onIncreaseQuantity,
+  onDecreaseQuantity,
+  onRemoveFromCart,
   onSolicitarPagamento,
   onClearError
 }: PaymentPageProps) {
@@ -85,11 +91,54 @@ export default function PaymentPage({
                 >
                   <div>
                     <p className="font-semibold text-ink">{item.nome}</p>
-                    <p className="text-sm text-slate-600">Qtde: {item.quantidade}</p>
+                    <div className="mt-2 inline-flex items-center rounded-xl border border-slate-300 bg-white">
+                      <button
+                        type="button"
+                        onClick={() => onDecreaseQuantity(item.id)}
+                        className="h-9 w-9 text-lg font-bold text-slate-700 transition hover:bg-slate-100"
+                        aria-label={`Diminuir quantidade de ${item.nome}`}
+                      >
+                        -
+                      </button>
+                      <span className="w-10 text-center text-sm font-semibold text-ink">
+                        {item.quantidade}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => onIncreaseQuantity(item.id)}
+                        className="h-9 w-9 text-lg font-bold text-slate-700 transition hover:bg-slate-100"
+                        aria-label={`Aumentar quantidade de ${item.nome}`}
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
-                  <p className="font-bold text-accent">
-                    {currency.format(item.preco * item.quantidade)}
-                  </p>
+                  <div className="flex items-center gap-3">
+                    <p className="font-bold text-accent">
+                      {currency.format(item.preco * item.quantidade)}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => onRemoveFromCart(item.id)}
+                      className="rounded-lg border border-slate-300 bg-white p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                      aria-label={`Remover ${item.nome} da cesta`}
+                      title="Remover item"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        className="h-4 w-4"
+                      >
+                        <path d="M4 7h16" />
+                        <path d="M10 11v6" />
+                        <path d="M14 11v6" />
+                        <path d="M6 7l1 12h10l1-12" />
+                        <path d="M9 7V4h6v3" />
+                      </svg>
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>

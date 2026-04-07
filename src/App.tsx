@@ -38,6 +38,9 @@ export default function App() {
   const setProductsLoading = useAppStore((state) => state.setProductsLoading);
   const setProductsError = useAppStore((state) => state.setProductsError);
   const addToCart = useAppStore((state) => state.addToCart);
+  const increaseQuantity = useAppStore((state) => state.increaseQuantity);
+  const decreaseQuantity = useAppStore((state) => state.decreaseQuantity);
+  const removeFromCart = useAppStore((state) => state.removeFromCart);
   const clearCart = useAppStore((state) => state.clearCart);
 
   useEffect(() => {
@@ -163,6 +166,9 @@ export default function App() {
         isSubmitting={pagamentoEmAndamento}
         onBack={() => setPagina("produtos")}
         onLogout={handleLogout}
+        onIncreaseQuantity={increaseQuantity}
+        onDecreaseQuantity={decreaseQuantity}
+        onRemoveFromCart={removeFromCart}
         onSolicitarPagamento={handleSolicitarPagamento}
         onClearError={() => setErroPagamento("")}
       />

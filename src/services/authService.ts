@@ -14,8 +14,17 @@ const keycloak = new Keycloak({
   clientId: KEYCLOAK_CLIENT_ID
 });
 
+function isPkceSupported(): boolean {
+  if (typeof window === "undefined") return false;
+
+  const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  const secureContext = window.isSecureContext || isLocalhost;
+  return secureContext && typeof window.crypto?.subtle !== "undefined";
+}
+
 let initialized = false;
 let initPromise: Promise<boolean> | null = null;
+let pkceEnabled = false;
 
 export async function initAuth(): Promise<boolean> {
   if (initialized) {
@@ -35,10 +44,15 @@ export async function initAuth(): Promise<boolean> {
     keycloakUrl: KEYCLOAK_URL
   });
 
+  pkceEnabled = isPkceSupported();
+  if (!pkceEnabled) {
+    logger.warn("PKCE desabilitado no ambiente atual por falta de contexto seguro ou Web Crypto API.");
+  }
+
   initPromise = keycloak
     .init({
       onLoad: "check-sso",
-      pkceMethod: "S256",
+      pkceMethod: pkceEnabled ? "S256" : false,
       checkLoginIframe: false
     })
     .then((authenticated) => {
@@ -61,7 +75,8 @@ export async function initAuth(): Promise<boolean> {
 export async function login(): Promise<void> {
   logger.info("Redirecionando usuario para login.");
   await keycloak.login({
-    redirectUri: KEYCLOAK_REDIRECT_URI
+    redirectUri: KEYCLOAK_REDIRECT_URI,
+    pkceMethod: pkceEnabled ? "S256" : undefined
   });
 }
 

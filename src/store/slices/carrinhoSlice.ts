@@ -3,6 +3,9 @@ import type { CartItem, Product } from "../../types/domain";
 type CarrinhoSlice = {
   carrinho: CartItem[];
   addToCart: (product: Product, quantidade: number) => void;
+  increaseQuantity: (productId: number) => void;
+  decreaseQuantity: (productId: number) => void;
+  removeFromCart: (productId: number) => void;
   clearCart: () => void;
 };
 
@@ -28,6 +31,24 @@ export function createCarrinhoSlice(set: Setter, get: Getter): CarrinhoSlice {
           carrinho: [...state.carrinho, { ...product, quantidade }]
         };
       }),
+    increaseQuantity: (productId) =>
+      set((state) => ({
+        carrinho: state.carrinho.map((item) =>
+          item.id === productId ? { ...item, quantidade: item.quantidade + 1 } : item
+        )
+      })),
+    decreaseQuantity: (productId) =>
+      set((state) => ({
+        carrinho: state.carrinho.flatMap((item) => {
+          if (item.id !== productId) return [item];
+          if (item.quantidade <= 1) return [];
+          return [{ ...item, quantidade: item.quantidade - 1 }];
+        })
+      })),
+    removeFromCart: (productId) =>
+      set((state) => ({
+        carrinho: state.carrinho.filter((item) => item.id !== productId)
+      })),
     clearCart: () => {
       if (get().carrinho.length === 0) return;
       set({ carrinho: [] });
